@@ -12,10 +12,11 @@ const CONFIG = {
 
     FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 
-    EMAIL_SERVICE: process.env.EMAIL_SERVICE || 'gmail',
+    EMAIL_SERVICE: process.env.EMAIL_SERVICE,
     EMAIL_USER: process.env.EMAIL_USER,
     EMAIL_PASS: process.env.EMAIL_PASS,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    EMAIL_HOST: process.env.EMAIL_HOST,
 
     REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
 }
