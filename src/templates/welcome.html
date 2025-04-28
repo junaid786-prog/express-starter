@@ -1,24 +1,148 @@
-{% comment %} welcome template {% endcomment %} {% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/welcome.css' %}" />
-
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}" />
+    <title>Welcome to Our Platform</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #4285f4;
+        padding: 20px;
+        text-align: center;
+      }
+      .header img {
+        max-width: 150px;
+      }
+      .content {
+        padding: 20px;
+        background-color: #fff;
+      }
+      .footer {
+        font-size: 12px;
+        color: #777;
+        text-align: center;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #4285f4;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin: 20px 0;
+      }
+      .feature-box {
+        border-left: 3px solid #4285f4;
+        padding-left: 15px;
+        margin: 15px 0;
+      }
+      .social-links {
+        text-align: center;
+        margin: 20px 0;
+      }
+      .social-links a {
+        display: inline-block;
+        margin: 0 10px;
+      }
+      .plan-details {
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        padding: 15px;
+        margin: 20px 0;
+      }
+    </style>
   </head>
-
   <body>
     <div class="container">
-      <h1>Welcome to the Django Application!</h1>
-      <p>This is a simple welcome page.</p>
-      <a href="{% url 'home' %}" class="btn btn-primary">Go to Home</a>
-    </div>
+      <div class="header">
+        <img src="{{logoUrl}}" alt="Company Logo" />
+      </div>
+      <div class="content">
+        <h2>Welcome to Our Platform, {{name}}!</h2>
+        <p>Thank you for joining us. We're excited to have you on board!</p>
 
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+        <p>
+          Your account has been successfully created and you now have access to
+          our platform. Here's what you can do next:
+        </p>
+
+        <div class="feature-box">
+          <h3>Complete Your Profile</h3>
+          <p>
+            Add more details to your profile to personalize your experience.
+          </p>
+        </div>
+
+        <div class="feature-box">
+          <h3>Explore Our Features</h3>
+          <p>Discover all the tools and resources available in your account.</p>
+        </div>
+
+        <div class="feature-box">
+          <h3>Create Your First Report</h3>
+          <p>Start using our AI-powered tools to generate valuable insights.</p>
+        </div>
+
+        <div class="plan-details">
+          <h3>Your Plan: {{planName}}</h3>
+          <p>You're currently on the {{planName}} plan, which includes:</p>
+          <ul>
+            <li>{{planFeature1}}</li>
+            <li>{{planFeature2}}</li>
+            <li>{{planFeature3}}</li>
+          </ul>
+
+          <p>
+            Need more features?
+            <a href="{{upgradePlanUrl}}">Upgrade your plan</a>
+          </p>
+        </div>
+
+        <div style="text-align: center">
+          <a href="{{dashboardUrl}}" class="button">Go to Dashboard</a>
+        </div>
+
+        <p>
+          If you have any questions or need assistance, our support team is
+          always here to help. Just reply to this email or contact us at
+          <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+        </p>
+
+        <p>Best regards,<br />The Team</p>
+
+        <div class="social-links">
+          <p>Connect with us:</p>
+          <a href="{{twitterUrl}}">Twitter</a> |
+          <a href="{{linkedinUrl}}">LinkedIn</a> |
+          <a href="{{facebookUrl}}">Facebook</a>
+        </div>
+      </div>
+      <div class="footer">
+        <p>&copy; {{currentYear}} {{companyName}}. All rights reserved.</p>
+        <p>{{companyAddress}}</p>
+        <p>
+          <small>
+            You're receiving this email because you recently created an account
+            on our platform. If you prefer not to receive emails like this, you
+            can <a href="{{unsubscribeUrl}}">unsubscribe</a>.
+          </small>
+        </p>
+      </div>
+    </div>
   </body>
 </html>

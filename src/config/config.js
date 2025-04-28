@@ -19,6 +19,12 @@ const CONFIG = {
     EMAIL_HOST: process.env.EMAIL_HOST,
 
     REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
+
+    COMPANY_NAME: process.env.COMPANY_NAME || 'Changetools',
+    COMPANY_ADDRESS: process.env.COMPANY_ADDRESS || '123 Main St, City, Country',
+    COMPANY_PHONE: process.env.COMPANY_PHONE || '+1234567890',
+
+    LOGO_URL: process.env.LOGO_URL || 'https://example.com/logo.png',
 }
 
 module.exports = CONFIG;
