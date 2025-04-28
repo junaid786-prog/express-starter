@@ -1,25 +1,67 @@
 const express = require('express');
-const { validate } = require('../middlewares/validator');
-const { authenticate, authorize } = require('../middlewares/auth');
 const authController = require('../controllers/authController');
-const authValidator = require('../../utils/validators/authValidator');
+const authMiddleware = require('../middlewares/auth');
 
 const router = express.Router();
 
 // Public routes
-router.post('/login', validate(authValidator.login), authController.login);
+router.post(
+    '/register',
+    authMiddleware.verifyCaptcha,
+    authMiddleware.rateLimit(5, 60 * 60 * 1000),
+    authController.register
+);
 
-// Protected routes
-router.use(authenticate);
+router.post(
+    '/login',
+    authMiddleware.rateLimit(10, 15 * 60 * 1000),
+    authController.login
+);
 
-// User profile routes
-router.get('/profile', authController.getUserProfile);
-router.patch('/profile', validate(authValidator.updateProfile), authController.updateUserProfile);
-router.post('/change-password', validate(authValidator.changePassword), authController.changePassword);
+router.post('/google', authController.googleAuth);
 
-// Admin routes
-router.post('/users', authenticate, authorize('admin'), validate(authValidator.createUser), authController.createUser);
-router.get('/users/:id', authenticate, authorize('admin'), validate(authValidator.getUser), authController.getUser);
-router.patch('/users/:id', authenticate, authorize('admin'), validate(authValidator.updateUser), authController.updateUser);
+router.post('/logout', authController.logout);
+
+// Email verification
+router.get('/verify-email/:token', authController.verifyEmail);
+router.post(
+    '/resend-verification',
+    authMiddleware.rateLimit(3, 60 * 60 * 1000),
+    authController.resendVerification
+);
+
+// Password reset
+router.post(
+    '/forgot-password',
+    authMiddleware.rateLimit(3, 60 * 60 * 1000),
+    authMiddleware.verifyCaptcha,
+    authController.forgotPassword
+);
+
+router.post(
+    '/reset-password/:token',
+    authMiddleware.rateLimit(5, 60 * 60 * 1000),
+    authController.resetPassword
+);
+
+// Check if email exists (for registration form validation)
+router.post('/check-email', authController.checkEmail);
+
+// Token refresh
+router.post('/refresh-token', authController.refreshToken);
+
+// Protected routes - require authentication
+router.use(authMiddleware.authenticate);
+
+// Get current user profile
+router.get('/me', authController.getCurrentUser);
+
+// Change password (requires authentication)
+router.patch(
+    '/change-password',
+    authMiddleware.rateLimit(5, 60 * 60 * 1000),
+    authMiddleware.isEmailVerified,
+    authController.changePassword
+);
 
 module.exports = router;

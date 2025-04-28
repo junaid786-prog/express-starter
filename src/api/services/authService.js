@@ -1,155 +1,391 @@
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { promisify } = require('util');
+const { sendEmail } = require('../../utils/emailService');
+const CONFIG = require('../../config/config');
 const APIError = require('../../utils/APIError');
 
-/**
- * Generate JWT token
- * @param {string} userId
- * @returns {string}
- */
-const generateToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRATION || '1d'
-    });
-};
-
-/**
- * Login with username and password
- * @param {string} username
- * @param {string} password
- * @returns {Promise<Object>}
- */
-const login = async (username, password) => {
-    // Include password in the query results for validation
-    const user = await User.findOne({ username }).select('+password');
-
-    if (!user || !(await user.isValidPassword(password))) {
-        throw new APIError('Invalid username or password', 401);
-    }
-
-    if (!user.isActive) {
-        throw new APIError('User account is inactive', 403);
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    return {
-        user: {
-            id: user._id,
-            name: user.name,
-            username: user.username,
-            email: user.email,
-            role: user.role
-        },
-        token
-    };
-};
-
-/**
- * Create a new user
- * @param {Object} userData
- * @returns {Promise<Object>}
- */
-const createUser = async (userData) => {
-    try {
-        const user = await User.create(userData);
-
-        return {
-            id: user._id,
-            name: user.name,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            isActive: user.isActive
-        };
-    } catch (error) {
-        if (error.code === 11000) {
-            // MongoDB duplicate key error
-            const field = Object.keys(error.keyPattern)[0];
-            throw new APIError(`${field.charAt(0).toUpperCase() + field.slice(1)} already exists`, 400);
+class AuthService {
+    /**
+     * Register a new user
+     * @param {Object} userData - User registration data
+     * @returns {Object} New user object
+     */
+    async registerUser(userData) {
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: userData.email });
+        if (existingUser) {
+            throw new APIError('User with this email already exists', 400);
         }
-        throw error;
-    }
-};
 
-/**
- * Change user password
- * @param {string} userId
- * @param {string} currentPassword
- * @param {string} newPassword
- * @returns {Promise<boolean>}
- */
-const changePassword = async (userId, currentPassword, newPassword) => {
-    const user = await User.findById(userId).select('+password');
+        // Generate email verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
-    if (!user) {
-        throw new APIError('User not found', 404);
-    }
+        // Create new user
+        const newUser = await User.create({
+            ...userData,
+            emailVerificationToken: verificationToken,
+            emailVerificationExpires: verificationTokenExpires,
+            isEmailVerified: false,
+        });
 
-    if (!(await user.isValidPassword(currentPassword))) {
-        throw new APIError('Current password is incorrect', 401);
-    }
+        // Remove password from response
+        newUser.password = undefined;
 
-    user.password = newPassword;
-    await user.save();
+        // Send verification email
+        const verificationURL = `${CONFIG.FRONTEND_URL}/verify-email/${verificationToken}`;
+        await this.sendVerificationEmail(newUser.email, newUser.name, verificationURL);
 
-    return true;
-};
-
-/**
- * Get user by ID
- * @param {string} id
- * @returns {Promise<Object>}
- */
-const getUserById = async (id) => {
-    const user = await User.findById(id);
-
-    if (!user) {
-        throw new APIError('User not found', 404);
+        return newUser;
     }
 
-    return user;
-};
+    /**
+     * Login a user
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Object} User data and JWT token
+     */
+    async loginUser(email, password) {
+        // Find user by email with password included
+        const user = await User.findOne({ email }).select('+password');
+        if (!user) {
+            throw new APIError('Invalid email or password', 401);
+        }
 
-/**
- * Update user
- * @param {string} id
- * @param {Object} updateData
- * @returns {Promise<Object>}
- */
-const updateUser = async (id, updateData) => {
-    // Filter out password from update data
-    const { password, ...dataToUpdate } = updateData;
+        // Check if password is correct
+        const isPasswordValid = await user.isValidPassword(password);
+        if (!isPasswordValid) {
+            throw new APIError('Invalid email or password', 401);
+        }
 
-    const user = await User.findByIdAndUpdate(
-        id,
-        dataToUpdate,
-        { new: true, runValidators: true }
-    );
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            throw new APIError('Please verify your email before logging in', 403);
+        }
 
-    if (!user) {
-        throw new APIError('User not found', 404);
+        // Update last login timestamp
+        user.lastLogin = Date.now();
+        await user.save({ validateBeforeSave: false });
+
+        // Generate JWT token
+        const token = this.generateJwtToken(user._id);
+
+        // Remove password from response
+        user.password = undefined;
+
+        return { user, token };
     }
 
-    return {
-        id: user._id,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive
-    };
-};
+    /**
+     * Login or register with Google
+     * @param {string} googleId - Google ID
+     * @param {string} email - User email
+     * @param {string} name - User name
+     * @param {string} profilePicture - Profile picture URL
+     * @returns {Object} User data and JWT token
+     */
+    async googleAuth(googleId, email, name, profilePicture) {
+        // Check if user exists with this Google ID
+        let user = await User.findOne({ googleId });
 
-module.exports = {
-    login,
-    createUser,
-    changePassword,
-    getUserById,
-    updateUser
-};
+        // If not found by Google ID, try with email
+        if (!user) {
+            user = await User.findOne({ email });
+
+            // If found by email, update with Google ID
+            if (user) {
+                user.googleId = googleId;
+                user.profilePicture = profilePicture || user.profilePicture;
+                user.isEmailVerified = true; // Google auth implies verified email
+                await user.save({ validateBeforeSave: false });
+            } else {
+                // Create new user if not found
+                user = await User.create({
+                    email,
+                    name,
+                    googleId,
+                    profilePicture,
+                    password: crypto.randomBytes(16).toString('hex'), // Random password
+                    isEmailVerified: true, // Google auth implies verified email
+                });
+            }
+        }
+
+        // Update last login timestamp
+        user.lastLogin = Date.now();
+        await user.save({ validateBeforeSave: false });
+
+        // Generate JWT token
+        const token = this.generateJwtToken(user._id);
+
+        // Remove password from response
+        user.password = undefined;
+
+        return { user, token };
+    }
+
+    /**
+     * Verify email address
+     * @param {string} token - Verification token
+     * @returns {Object} Updated user object
+     */
+    async verifyEmail(token) {
+        // Find user with matching token that hasn't expired
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            throw new APIError('Invalid or expired verification token', 400);
+        }
+
+        // Update user verification status
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        // Generate JWT token
+        const jwtToken = this.generateJwtToken(user._id);
+
+        // Remove password from response
+        user.password = undefined;
+
+        return { user, token: jwtToken };
+    }
+
+    /**
+     * Request password reset
+     * @param {string} email - User email
+     */
+    async forgotPassword(email) {
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new APIError('No user found with this email', 404);
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+        // Save hashed token to user record
+        user.passwordResetToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+        user.passwordResetExpires = resetTokenExpires;
+        await user.save({ validateBeforeSave: false });
+
+        // Send password reset email
+        const resetURL = `${CONFIG.FRONTEND_URL}/reset-password/${resetToken}`;
+        await this.sendPasswordResetEmail(user.email, user.name, resetURL);
+
+        return true;
+    }
+
+    /**
+     * Reset password with token
+     * @param {string} token - Reset token
+     * @param {string} newPassword - New password
+     * @returns {Object} Updated user object
+     */
+    async resetPassword(token, newPassword) {
+        // Hash token to match hashed token in database
+        const hashedToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        // Find user with matching token that hasn't expired
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() }
+        }).select('+password');
+
+        if (!user) {
+            throw new APIError('Invalid or expired reset token', 400);
+        }
+
+        // Update password and clear reset tokens
+        user.password = newPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        // Generate JWT token
+        const jwtToken = this.generateJwtToken(user._id);
+
+        // Remove password from response
+        user.password = undefined;
+
+        return { user, token: jwtToken };
+    }
+
+    /**
+     * Change password for logged-in user
+     * @param {string} userId - User ID
+     * @param {string} currentPassword - Current password
+     * @param {string} newPassword - New password
+     * @returns {Object} Updated user object
+     */
+    async changePassword(userId, currentPassword, newPassword) {
+        // Find user by ID with password included
+        const user = await User.findById(userId).select('+password');
+        if (!user) {
+            throw new APIError('User not found', 404);
+        }
+
+        // Check if current password is correct
+        const isPasswordValid = await user.isValidPassword(currentPassword);
+        if (!isPasswordValid) {
+            throw new APIError('Current password is incorrect', 401);
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        // Generate new JWT token
+        const token = this.generateJwtToken(user._id);
+
+        // Remove password from response
+        user.password = undefined;
+
+        return { user, token };
+    }
+
+    /**
+     * Log out user (server-side actions)
+     * @param {string} userId - User ID
+     */
+    async logoutUser(userId) {
+        // Optional: Track logout in user analytics or activity log
+        await User.findByIdAndUpdate(userId, {
+            $push: { activityLog: { action: 'logout', timestamp: Date.now() } }
+        });
+
+        return true;
+    }
+
+    /**
+     * Generate JWT token
+     * @param {string} userId - User ID
+     * @returns {string} JWT token
+     */
+    generateJwtToken(userId) {
+        return jwt.sign(
+            { id: userId },
+            CONFIG.JWT_SECRET,
+            { expiresIn: CONFIG.JWT_EXPIRES_IN }
+        );
+    }
+
+    /**
+     * Verify JWT token
+     * @param {string} token - JWT token
+     * @returns {Object} Decoded token payload
+     */
+    async verifyJwtToken(token) {
+        const decoded = await promisify(jwt.verify)(token, CONFIG.JWT_SECRET);
+        return decoded;
+    }
+
+    /**
+     * Get user by ID
+     * @param {string} userId - User ID
+     * @returns {Object} User object
+     */
+    async getUserById(userId) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new APIError('User not found', 404);
+        }
+        return user;
+    }
+
+    /**
+     * Send email verification link
+     * @param {string} email - User email
+     * @param {string} name - User name
+     * @param {string} verificationURL - Verification URL
+     */
+    async sendVerificationEmail(email, name, verificationURL) {
+        const subject = 'Please verify your email address';
+        const htmlContent = `
+      <h1>Email Verification</h1>
+      <p>Hello ${name},</p>
+      <p>Thank you for registering with our platform. Please verify your email address by clicking the link below:</p>
+      <a href="${verificationURL}" style="padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+      <p>This link will expire in 24 hours.</p>
+      <p>If you did not create an account, please ignore this email.</p>
+    `;
+
+        await sendEmail({
+            to: email,
+            subject,
+            html: htmlContent
+        });
+    }
+
+    /**
+     * Send password reset email
+     * @param {string} email - User email
+     * @param {string} name - User name
+     * @param {string} resetURL - Reset URL
+     */
+    async sendPasswordResetEmail(email, name, resetURL) {
+        const subject = 'Password Reset Request';
+        const htmlContent = `
+      <h1>Password Reset</h1>
+      <p>Hello ${name},</p>
+      <p>You requested a password reset. Please click the link below to reset your password:</p>
+      <a href="${resetURL}" style="padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request this reset, please ignore this email and your password will remain unchanged.</p>
+    `;
+
+        await sendEmail({
+            to: email,
+            subject,
+            html: htmlContent
+        });
+    }
+
+    /**
+     * Resend verification email
+     * @param {string} email - User email
+     */
+    async resendVerificationEmail(email) {
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new APIError('No user found with this email', 404);
+        }
+
+        // If already verified
+        if (user.isEmailVerified) {
+            throw new APIError('Email already verified', 400);
+        }
+
+        // Generate new verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+        // Update user record
+        user.emailVerificationToken = verificationToken;
+        user.emailVerificationExpires = verificationTokenExpires;
+        await user.save({ validateBeforeSave: false });
+
+        // Send verification email
+        const verificationURL = `${CONFIG.FRONTEND_URL}/verify-email/${verificationToken}`;
+        await this.sendVerificationEmail(user.email, user.name, verificationURL);
+
+        return true;
+    }
+}
+
+module.exports = new AuthService();

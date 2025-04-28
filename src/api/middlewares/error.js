@@ -1,3 +1,4 @@
+const CONFIG = require('../../config/config');
 const APIError = require('../../utils/APIError');
 const APIResponse = require('../../utils/APIResponse');
 
@@ -17,7 +18,7 @@ const errorHandler = (err, req, res, next) => {
     const { statusCode, message } = err;
 
     // Log error details for monitoring
-    if (process.env.NODE_ENV === 'development') {
+    if (CONFIG.NODE_ENV === 'development') {
         console.error(err);
     }
 

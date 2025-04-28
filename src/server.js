@@ -1,6 +1,7 @@
 require('dotenv').config();
 const startApp = require('./loaders');
 const logger = require('./config/logger');
+const CONFIG = require('./config/config');
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
@@ -16,7 +17,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Start the application
 startApp()
     .then(() => {
-        logger.info(`Environment: ${process.env.NODE_ENV}`);
+        logger.info(`Environment: ${CONFIG.NODE_ENV}`);
     })
     .catch((error) => {
         logger.error('Failed to start application:', error);

@@ -1,6 +1,7 @@
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
+const CONFIG = require('./config');
 
 // Create logs directory if it doesn't exist
 const logDir = 'logs';
@@ -16,7 +17,7 @@ const logFormat = winston.format.combine(
 
 // Create the logger instance
 const logger = winston.createLogger({
-    level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+    level: CONFIG.NODE_ENV === 'development' ? 'debug' : 'info',
     format: logFormat,
     transports: [
         // Console logging

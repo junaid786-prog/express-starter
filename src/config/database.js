@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const logger = require('./logger');
+const CONFIG = require('./config');
 
 /**
  * Database connection configuration
@@ -9,7 +10,7 @@ const dbConfig = {
     options: {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        autoIndex: process.env.NODE_ENV !== 'production', // Build indexes in development but not in production
+        autoIndex: CONFIG.NODE_ENV !== 'production', // Build indexes in development but not in production
     },
 
     /**
@@ -18,7 +19,7 @@ const dbConfig = {
      */
     connect: async () => {
         try {
-            const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/vulcan-tracking';
+            const uri = CONFIG.MONGODB_URI;
 
             // Set up MongoDB connection events
             mongoose.connection.on('connected', () => {

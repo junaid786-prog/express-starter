@@ -2,43 +2,34 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Name is required'],
-        trim: true
-    },
-    username: {
-        type: String,
-        required: [true, 'Username is required'],
-        unique: true,
-        trim: true,
-        lowercase: true
-    },
-    email: {
-        type: String,
-        required: [true, 'Email is required'],
-        unique: true,
-        trim: true,
-        lowercase: true
-    },
-    password: {
-        type: String,
-        required: [true, 'Password is required'],
-        minlength: 8,
-        select: false
-    },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, select: false },
+    name: { type: String, required: true },
+    profilePicture: { type: String },
+    googleId: { type: String },
     role: {
         type: String,
-        enum: ['user', 'admin', 'customer'],
-        default: 'user'
+        enum: ['free', 'professional', 'business', 'enterprise', 'admin'],
+        default: 'free'
     },
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    lastLogin: {
-        type: Date
-    },
+    createdAt: { type: Date, default: Date.now },
+    lastLogin: { type: Date },
+    // If business tier with multiple users
+    parentAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    // For business tier parent accounts
+    childAccounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    isActive: { type: Boolean, default: true },
+    timezone: { type: String, default: 'UTC' },
+    company: { type: String },
+    position: { type: String },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
+    isEmailVerified: { type: Boolean, default: false },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
+    passwordChangedAt: { type: Date },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -46,7 +37,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Create indexes
-// userSchema.index({ username: 1 }, { unique: true });
 // userSchema.index({ email: 1 }, { unique: true });
 
 // Hash password before saving

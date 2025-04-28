@@ -7,6 +7,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const routes = require('../api/routes');
 const { errorConverter, errorHandler } = require('../api/middlewares/error');
+const CONFIG = require('./config');
 
 // Initialize Express app
 const app = express();
@@ -28,7 +29,7 @@ app.use(cors());
 // app.options('*', cors());
 
 // Request logging
-if (process.env.NODE_ENV === 'development') {
+if (CONFIG.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
