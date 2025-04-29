@@ -5,22 +5,26 @@ const APIError = require('../../utils/APIError');
 const catchAsync = require('../../utils/catchAsync');
 const authService = require('../services/authService');
 const CONFIG = require('../../config/config');
+const { TIERS_LEVELS } = require('../../config/plans');
 
+const tierLevels = TIERS_LEVELS;
 /**
  * Authenticate user based on JWT token
  */
 exports.authenticate = catchAsync(async (req, res, next) => {
     // 1) Get token from request
     let token;
+    
     if (
         req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
+        req.headers.authorization.startsWith('Bearer') &&
+        req.headers.authorization.split(' ')?.length > 1
     ) {
-        // From Authorization header
         token = req.headers.authorization.split(' ')[1];
     } else if (req.cookies?.jwt) {
-        // From cookie
         token = req.cookies.jwt;
+    } else if (req.headers.cookie && req.headers.cookie.startsWith('jwt')) {
+        token = req.headers.cookie.split('=')[1];
     }
 
     if (!token) {
@@ -220,14 +224,6 @@ exports.verifyCaptcha = catchAsync(async (req, res, next) => {
  * @param {string} requiredTier - Minimum tier required for access 
  */
 exports.checkSubscription = (requiredTier) => {
-    const tierLevels = {
-        'free': 0,
-        'professional': 1,
-        'business': 2,
-        'enterprise': 3,
-        'admin': 4
-    };
-
     return catchAsync(async (req, res, next) => {
         // Admin always has access
         if (req.user.role === 'admin') {

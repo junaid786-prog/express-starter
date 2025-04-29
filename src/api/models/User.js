@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { USER_ROLES_LIST } = require('../../config/roles');
 
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
@@ -9,7 +10,7 @@ const userSchema = new mongoose.Schema({
     googleId: { type: String },
     role: {
         type: String,
-        enum: ['free', 'professional', 'business', 'enterprise', 'admin'],
+        enum: USER_ROLES_LIST,
         default: 'free'
     },
     createdAt: { type: Date, default: Date.now },

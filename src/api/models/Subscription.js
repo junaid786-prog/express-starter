@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const { PLAN_NAMES_LIST } = require('../../config/plans');
 
 const subscriptionSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     plan: {
         type: String,
-        enum: ['free', 'professional', 'business', 'enterprise'],
+        enum: PLAN_NAMES_LIST,
         required: true
     },
     status: {

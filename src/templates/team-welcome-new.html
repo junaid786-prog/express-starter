@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to the Team!</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #4285f4;
+        padding: 20px;
+        text-align: center;
+      }
+      .header img {
+        max-width: 150px;
+      }
+      .content {
+        padding: 20px;
+        background-color: #fff;
+      }
+      .footer {
+        font-size: 12px;
+        color: #777;
+        text-align: center;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #4285f4;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin: 20px 0;
+      }
+      .feature-box {
+        border-left: 3px solid #4285f4;
+        padding-left: 15px;
+        margin: 15px 0;
+      }
+      .welcome-banner {
+        background-color: #f5f9ff;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .welcome-banner h2 {
+        margin-top: 0;
+        color: #4285f4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="{{logoUrl}}" alt="Company Logo" />
+      </div>
+      <div class="content">
+        <div class="welcome-banner">
+          <h2>Welcome to {{teamName}}!</h2>
+          <p>Your account has been created and you're now part of the team.</p>
+        </div>
+
+        <p>Hello {{name}},</p>
+        <p>
+          Thank you for accepting the invitation to join {{teamName}}. Your
+          account has been successfully created, and you now have access to all
+          the team resources with your role as <strong>{{role}}</strong>.
+        </p>
+
+        <p>Here's what you can do next:</p>
+
+        <div class="feature-box">
+          <h3>Complete Your Profile</h3>
+          <p>
+            Add more details to your profile so your team members can get to
+            know you better.
+          </p>
+        </div>
+
+        <div class="feature-box">
+          <h3>Explore Team Resources</h3>
+          <p>Check out the shared resources and projects available to you.</p>
+        </div>
+
+        <div class="feature-box">
+          <h3>Collaborate with Your Team</h3>
+          <p>Start working with your team members on projects and reports.</p>
+        </div>
+
+        <div style="text-align: center">
+          <a href="{{dashboardUrl}}" class="button">Go to Dashboard</a>
+        </div>
+
+        <p>
+          If you have any questions about your account or need assistance,
+          please don't hesitate to contact our support team at
+          <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+        </p>
+
+        <p>Best regards,<br />The Team</p>
+      </div>
+      <div class="footer">
+        <p>&copy; {{currentYear}} {{companyName}}. All rights reserved.</p>
+        <p>{{companyAddress}}</p>
+        <p>
+          <small>
+            This email was sent because you accepted an invitation to join a
+            team on our platform.
+          </small>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
