@@ -22,10 +22,7 @@ const logger = winston.createLogger({
     transports: [
         // Console logging
         new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                logFormat
-            )
+            format: winston.format.combine(winston.format.colorize(), logFormat)
         }),
         // File logging - general logs
         new winston.transports.File({

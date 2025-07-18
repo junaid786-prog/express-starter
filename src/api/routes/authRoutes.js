@@ -12,11 +12,7 @@ router.post(
     authController.register
 );
 
-router.post(
-    '/login',
-    authMiddleware.rateLimit(10, 15 * 60 * 1000),
-    authController.login
-);
+router.post('/login', authMiddleware.rateLimit(10, 15 * 60 * 1000), authController.login);
 
 router.post('/google', authController.googleAuth);
 

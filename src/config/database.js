@@ -10,7 +10,7 @@ const dbConfig = {
     options: {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        autoIndex: CONFIG.NODE_ENV !== 'production', // Build indexes in development but not in production
+        autoIndex: CONFIG.NODE_ENV !== 'production' // Build indexes in development but not in production
     },
 
     /**
@@ -26,7 +26,7 @@ const dbConfig = {
                 logger.info('MongoDB connected successfully');
             });
 
-            mongoose.connection.on('error', (err) => {
+            mongoose.connection.on('error', err => {
                 logger.error(`MongoDB connection error: ${err}`);
             });
 

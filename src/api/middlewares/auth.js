@@ -5,16 +5,14 @@ const APIError = require('../../utils/APIError');
 const catchAsync = require('../../utils/catchAsync');
 const authService = require('../services/authService');
 const CONFIG = require('../../config/config');
-const { TIERS_LEVELS } = require('../../config/plans');
 
-const tierLevels = TIERS_LEVELS;
 /**
  * Authenticate user based on JWT token
  */
 exports.authenticate = catchAsync(async (req, res, next) => {
     // 1) Get token from request
     let token;
-    
+
     if (
         req.headers.authorization &&
         req.headers.authorization.startsWith('Bearer') &&
@@ -43,10 +41,7 @@ exports.authenticate = catchAsync(async (req, res, next) => {
 
         // 4) Check if user changed password after the token was issued
         if (user.passwordChangedAt && decoded.iat) {
-            const changedTimestamp = parseInt(
-                user.passwordChangedAt.getTime() / 1000,
-                10
-            );
+            const changedTimestamp = parseInt(user.passwordChangedAt.getTime() / 1000, 10);
 
             if (decoded.iat < changedTimestamp) {
                 throw new APIError('Password was changed. Please log in again', 401);
@@ -97,10 +92,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
     if (req.cookies?.jwt) {
         try {
             // 1) Verify token
-            const decoded = await promisify(jwt.verify)(
-                req.cookies.jwt,
-                CONFIG.JWT_SECRET
-            );
+            const decoded = await promisify(jwt.verify)(req.cookies.jwt, CONFIG.JWT_SECRET);
 
             // 2) Check if user still exists
             const user = await User.findById(decoded.id);
@@ -110,10 +102,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
 
             // 3) Check if user changed password after the token was issued
             if (user.passwordChangedAt && decoded.iat) {
-                const changedTimestamp = parseInt(
-                    user.passwordChangedAt.getTime() / 1000,
-                    10
-                );
+                const changedTimestamp = parseInt(user.passwordChangedAt.getTime() / 1000, 10);
 
                 if (decoded.iat < changedTimestamp) {
                     return next();
@@ -172,9 +161,7 @@ exports.rateLimit = (maxAttempts, windowMs) => {
 
         // If too many attempts
         if (ipAttempts.count >= maxAttempts) {
-            return next(
-                new APIError('Too many attempts. Please try again later', 429)
-            );
+            return next(new APIError('Too many attempts. Please try again later', 429));
         }
 
         // Update attempts
@@ -221,9 +208,9 @@ exports.verifyCaptcha = catchAsync(async (req, res, next) => {
 
 /**
  * Check subscription status and tier access
- * @param {string} requiredTier - Minimum tier required for access 
+ * @param {string} requiredTier - Minimum tier required for access
  */
-exports.checkSubscription = (requiredTier) => {
+exports.checkSubscription = requiredTier => {
     return catchAsync(async (req, res, next) => {
         // Admin always has access
         if (req.user.role === 'admin') {
@@ -231,12 +218,12 @@ exports.checkSubscription = (requiredTier) => {
         }
 
         // Check if user's tier level is sufficient
-        const userTierLevel = tierLevels[req.user.role];
-        const requiredTierLevel = tierLevels[requiredTier];
+        // const userTierLevel = tierLevels[req.user.role];
+        // const requiredTierLevel = tierLevels[requiredTier];
 
-        if (userTierLevel < requiredTierLevel) {
-            throw new APIError(`This feature requires ${requiredTier} subscription or higher`, 403);
-        }
+        // if (userTierLevel < requiredTierLevel) {
+        //     throw new APIError(`This feature requires ${requiredTier} subscription or higher`, 403);
+        // }
 
         next();
     });

@@ -77,7 +77,16 @@ class EmailService {
      * @param {Object} [options.bcc] - Optional bcc recipients
      * @returns {Promise<Object>} Result of the send operation
      */
-    async sendEmail({ to, subject, templateKey, data, from = CONFIG.EMAIL_FROM, attachments, cc, bcc }) {
+    async sendEmail({
+        to,
+        subject,
+        templateKey,
+        data,
+        from = CONFIG.EMAIL_FROM,
+        attachments,
+        cc,
+        bcc
+    }) {
         try {
             // Load and process the template
             const template = await this.loadTemplate(templateKey);
@@ -88,7 +97,7 @@ class EmailService {
                 to,
                 from,
                 subject,
-                html: htmlContent,
+                html: htmlContent
             };
 
             // Add optional fields if provided
@@ -110,7 +119,7 @@ class EmailService {
             // Send the email via SendGrid
             const result = await sgMail.send(msg);
             console.log(`Email sent to ${to} using template ${templateKey}`);
-            
+
             return result;
         } catch (error) {
             console.dir(error, { depth: null });

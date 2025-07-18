@@ -30,10 +30,7 @@ const errorHandler = (err, req, res, next) => {
     }
 
     // Send standardized error response
-    const response = APIResponse.error(
-        message,
-        statusCode
-    );
+    const response = APIResponse.error(message, statusCode);
 
     res.status(statusCode).json(response);
 };

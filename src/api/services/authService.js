@@ -28,7 +28,7 @@ class AuthService {
             ...userData,
             emailVerificationToken: verificationToken,
             emailVerificationExpires: verificationTokenExpires,
-            isEmailVerified: false,
+            isEmailVerified: false
         });
 
         // Remove password from response
@@ -108,7 +108,7 @@ class AuthService {
                     googleId,
                     profilePicture,
                     password: crypto.randomBytes(16).toString('hex'), // Random password
-                    isEmailVerified: true, // Google auth implies verified email
+                    isEmailVerified: true // Google auth implies verified email
                 });
             }
         }
@@ -173,10 +173,7 @@ class AuthService {
         const resetTokenExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
 
         // Save hashed token to user record
-        user.passwordResetToken = crypto
-            .createHash('sha256')
-            .update(resetToken)
-            .digest('hex');
+        user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
         user.passwordResetExpires = resetTokenExpires;
         await user.save({ validateBeforeSave: false });
 
@@ -195,10 +192,7 @@ class AuthService {
      */
     async resetPassword(token, newPassword) {
         // Hash token to match hashed token in database
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
         // Find user with matching token that hasn't expired
         const user = await User.findOne({
@@ -277,11 +271,7 @@ class AuthService {
      * @returns {string} JWT token
      */
     generateJwtToken(userId) {
-        return jwt.sign(
-            { id: userId },
-            CONFIG.JWT_SECRET,
-            { expiresIn: CONFIG.JWT_EXPIRES_IN }
-        );
+        return jwt.sign({ id: userId }, CONFIG.JWT_SECRET, { expiresIn: CONFIG.JWT_EXPIRES_IN });
     }
 
     /**
@@ -323,7 +313,7 @@ class AuthService {
                 verificationUrl: verificationURL,
                 logoUrl: CONFIG.LOGO_URL || 'https://yourdomain.com/logo.png',
                 companyName: CONFIG.COMPANY_NAME || 'Your Company',
-                companyAddress: CONFIG.COMPANY_ADDRESS || 'Company Address',
+                companyAddress: CONFIG.COMPANY_ADDRESS || 'Company Address'
             }
         });
     }
@@ -335,7 +325,6 @@ class AuthService {
      * @param {string} resetURL - Reset URL
      */
     async sendPasswordResetEmail(email, name, resetURL) {
-
         await emailService.sendEmail({
             to: email,
             subject: 'Password Reset Instructions',

@@ -39,9 +39,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
     // Set JWT as HTTP-only cookie for enhanced security
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -49,11 +47,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
     res.cookie('jwt', token, cookieOptions);
 
-    const response = APIResponse.success(
-        { user, token },
-        'Login successful',
-        200
-    );
+    const response = APIResponse.success({ user, token }, 'Login successful', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -69,18 +63,11 @@ exports.googleAuth = catchAsync(async (req, res, next) => {
         throw new APIError('Google ID and email are required', 400);
     }
 
-    const { user, token } = await authService.googleAuth(
-        googleId,
-        email,
-        name,
-        profilePicture
-    );
+    const { user, token } = await authService.googleAuth(googleId, email, name, profilePicture);
 
     // Set JWT as HTTP-only cookie
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -88,11 +75,7 @@ exports.googleAuth = catchAsync(async (req, res, next) => {
 
     res.cookie('jwt', token, cookieOptions);
 
-    const response = APIResponse.success(
-        { user, token },
-        'Google authentication successful',
-        200
-    );
+    const response = APIResponse.success({ user, token }, 'Google authentication successful', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -112,9 +95,7 @@ exports.verifyEmail = catchAsync(async (req, res, next) => {
 
     // Set JWT as HTTP-only cookie
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -169,9 +150,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
     // Set JWT as HTTP-only cookie
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -207,9 +186,7 @@ exports.changePassword = catchAsync(async (req, res, next) => {
 
     // Set JWT as HTTP-only cookie
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -217,11 +194,7 @@ exports.changePassword = catchAsync(async (req, res, next) => {
 
     res.cookie('jwt', token, cookieOptions);
 
-    const response = APIResponse.success(
-        { user, token },
-        'Password changed successfully',
-        200
-    );
+    const response = APIResponse.success({ user, token }, 'Password changed successfully', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -244,11 +217,7 @@ exports.logout = catchAsync(async (req, res, next) => {
         await authService.logoutUser(req.user._id);
     }
 
-    const response = APIResponse.success(
-        null,
-        'Logged out successfully',
-        200
-    );
+    const response = APIResponse.success(null, 'Logged out successfully', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -261,11 +230,7 @@ exports.getCurrentUser = catchAsync(async (req, res, next) => {
     // req.user is already set by the authenticate middleware
     const user = await authService.getUserById(req.user._id);
 
-    const response = APIResponse.success(
-        { user },
-        'User profile retrieved successfully',
-        200
-    );
+    const response = APIResponse.success({ user }, 'User profile retrieved successfully', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -283,11 +248,7 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
 
     await authService.resendVerificationEmail(email);
 
-    const response = APIResponse.success(
-        null,
-        'Verification email has been resent',
-        200
-    );
+    const response = APIResponse.success(null, 'Verification email has been resent', 200);
 
     return res.status(response.statusCode).json(response);
 });
@@ -320,7 +281,8 @@ exports.checkEmail = catchAsync(async (req, res, next) => {
  */
 exports.refreshToken = catchAsync(async (req, res, next) => {
     // Get refresh token from request
-    const refreshToken = req.cookies.refreshToken ||
+    const refreshToken =
+        req.cookies.refreshToken ||
         (req.body && req.body.refreshToken) ||
         (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
             ? req.headers.authorization.split(' ')[1]
@@ -330,13 +292,15 @@ exports.refreshToken = catchAsync(async (req, res, next) => {
         throw new APIError('Refresh token is required', 401);
     }
 
-    const { user, token, refreshToken: newRefreshToken } = await authService.refreshToken(refreshToken);
+    const {
+        user,
+        token,
+        refreshToken: newRefreshToken
+    } = await authService.refreshToken(refreshToken);
 
     // Set new JWT as HTTP-only cookie
     const cookieOptions = {
-        expires: new Date(
-            Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + CONFIG.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
         secure: CONFIG.NODE_ENV === 'production',
         sameSite: 'strict'
@@ -347,9 +311,7 @@ exports.refreshToken = catchAsync(async (req, res, next) => {
     // Set refresh token cookie with longer expiry
     const refreshCookieOptions = {
         ...cookieOptions,
-        expires: new Date(
-            Date.now() + CONFIG.REFRESH_TOKEN_EXPIRES_IN * 24 * 60 * 60 * 1000
-        )
+        expires: new Date(Date.now() + CONFIG.REFRESH_TOKEN_EXPIRES_IN * 24 * 60 * 60 * 1000)
     };
 
     res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);

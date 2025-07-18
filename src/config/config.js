@@ -24,7 +24,7 @@ const CONFIG = {
     COMPANY_ADDRESS: process.env.COMPANY_ADDRESS || '123 Main St, City, Country',
     COMPANY_PHONE: process.env.COMPANY_PHONE || '+1234567890',
 
-    LOGO_URL: process.env.LOGO_URL || 'https://example.com/logo.png',
-}
+    LOGO_URL: process.env.LOGO_URL || 'https://example.com/logo.png'
+};
 
 module.exports = CONFIG;

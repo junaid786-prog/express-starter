@@ -26,10 +26,12 @@ const changePassword = {
 };
 
 const updateProfile = {
-    body: Joi.object().keys({
-        name: Joi.string(),
-        email: Joi.string().email().allow(null, '')
-    }).min(1)
+    body: Joi.object()
+        .keys({
+            name: Joi.string(),
+            email: Joi.string().email().allow(null, '')
+        })
+        .min(1)
 };
 
 const getUser = {
@@ -42,12 +44,14 @@ const updateUser = {
     params: Joi.object().keys({
         id: Joi.number().integer().required()
     }),
-    body: Joi.object().keys({
-        name: Joi.string(),
-        email: Joi.string().email().allow(null, ''),
-        role: Joi.string().valid('admin', 'manager', 'staff'),
-        isActive: Joi.boolean()
-    }).min(1)
+    body: Joi.object()
+        .keys({
+            name: Joi.string(),
+            email: Joi.string().email().allow(null, ''),
+            role: Joi.string().valid('admin', 'manager', 'staff'),
+            isActive: Joi.boolean()
+        })
+        .min(1)
 };
 
 module.exports = {

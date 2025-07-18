@@ -4,7 +4,7 @@ const logger = require('./config/logger');
 const CONFIG = require('./config/config');
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
     logger.error('UNCAUGHT EXCEPTION:', error);
     process.exit(1);
 });
@@ -19,7 +19,7 @@ startApp()
     .then(() => {
         logger.info(`Environment: ${CONFIG.NODE_ENV}`);
     })
-    .catch((error) => {
+    .catch(error => {
         logger.error('Failed to start application:', error);
         process.exit(1);
     });
