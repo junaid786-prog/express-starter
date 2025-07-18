@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const routes = require('../api/routes');
 const { errorConverter, errorHandler } = require('../api/middlewares/error');
 const CONFIG = require('./config');
+const setupSwagger = require('../api/docs/swagger');
 
 // Initialize Express app
 const app = express();
@@ -41,6 +42,9 @@ const apiLimiter = rateLimit({
     legacyHeaders: false
 });
 
+// Serve Swagger API documentation
+setupSwagger(app);
+
 // Apply rate limiting to API routes
 app.use('/api', apiLimiter);
 
@@ -49,6 +53,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // API routes
 app.use('/api', routes);
+
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        success: true,  
+        statusCode: 200,
+        message: 'API is healthy'
+    });
+});
 
 // 404 route handler
 app.use((req, res, next) => {
